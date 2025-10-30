@@ -123,7 +123,7 @@ contract SlimLendTest is Test {
         assertEq(finalShares, expectedShares, "Borrower shares should be recorded correctly");
         
         // Verify collateralization ratio
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, 3e18, "Should be 300% collateralized ($300 collateral / $100 debt)");
         assertGe(ratio, 1.5e18, "Should meet minimum collateralization requirement");
     }
@@ -218,7 +218,7 @@ contract SlimLendTest is Test {
         (uint256 finalShares,) = c.borrowerInfo(user);
         assertEq(finalShares, 200e18, "Should have 200 shares total (100 old + 100 new)");
         
-        uint256 finalRatio = c.collateralization_ratio(user);
+        uint256 finalRatio = c.collateralizationRatio(user);
         assertEq(finalRatio, 2e18, "Should be 200% collateralized after new borrow");
     }
 
@@ -243,7 +243,7 @@ contract SlimLendTest is Test {
         vm.prank(user);
         c.borrow(borrowAmount); // Should succeed (exactly at boundary)
         
-        uint256 finalRatio = c.collateralization_ratio(user);
+        uint256 finalRatio = c.collateralizationRatio(user);
         assertEq(finalRatio, 1.5e18, "Should be exactly 150% collateralized");
     }
 
@@ -288,7 +288,7 @@ contract SlimLendTest is Test {
         (uint256 sharesAfterFirst,) = c.borrowerInfo(user);
         assertEq(sharesAfterFirst, 50e18, "Should have 50 shares after first borrow");
         
-        uint256 ratioAfterFirst = c.collateralization_ratio(user);
+        uint256 ratioAfterFirst = c.collateralizationRatio(user);
         assertEq(ratioAfterFirst, 6e18, "Should be 600% collateralized after first borrow");
         
         // Second borrow
@@ -298,7 +298,7 @@ contract SlimLendTest is Test {
         (uint256 sharesAfterSecond,) = c.borrowerInfo(user);
         assertEq(sharesAfterSecond, 80e18, "Should have 80 shares total");
         
-        uint256 ratioAfterSecond = c.collateralization_ratio(user);
+        uint256 ratioAfterSecond = c.collateralizationRatio(user);
         assertEq(ratioAfterSecond, 3.75e18, "Should be 375% collateralized after both borrows");
         
         // Verify user received both amounts
@@ -342,7 +342,7 @@ contract SlimLendTest is Test {
         vm.prank(user);
         c.borrow(borrowAmount); // Should succeed (300% collateralized)
         
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, 3e18, "Should be 300% collateralized at $2 price");
         
         // Test edge case: lower price makes same collateral insufficient
@@ -355,7 +355,7 @@ contract SlimLendTest is Test {
         vm.prank(user2);
         c.borrow(borrowAmount); // Should succeed (exactly at 150% minimum)
         
-        uint256 ratio2 = c.collateralization_ratio(user2);
+        uint256 ratio2 = c.collateralizationRatio(user2);
         assertEq(ratio2, 1.5e18, "Should be exactly 150% collateralized at $1 price");
     }
 

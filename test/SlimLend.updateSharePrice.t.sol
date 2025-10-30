@@ -79,7 +79,111 @@ contract SlimLendTest is Test {
         assertEq(timeAfter - timeBefore, 100);
     }
 
-    function test_last_update_share_price_100pct_util() public {
-
+    function test_share_price_accrual_with_utilization() public {
+        // Setup: Create 100% utilization (all deposited tokens are borrowed)
+        uint256 deposited = 1000e18;
+        uint256 borrowed = 1000e18;
+        
+        vm.store(address(c), TOTAL_DEPOSITED_TOKENS_SLOT, bytes32(uint256(deposited)));
+        vm.store(address(c), TOTAL_BORROWED_TOKENS_SLOT, bytes32(uint256(borrowed)));
+        
+        // Initial share prices
+        uint256 initialLpPrice = uint256(vm.load(address(c), LP_SHARE_PRICE_SLOT));
+        uint256 initialBorrowerPrice = uint256(vm.load(address(c), BORROWER_SHARE_PRICE_SLOT));
+        
+        // Verify initial state
+        assertEq(initialLpPrice, 1e18, "LP price should start at 1e18");
+        assertEq(initialBorrowerPrice, 1e18, "Borrower price should start at 1e18");
+        
+        // Skip time forward by 1 year (365 * 24 * 3600 = 31536000 seconds)
+        uint256 timeElapsed = 31536000;
+        skip(timeElapsed);
+        
+        c.updateSharePrices();
+        
+        uint256 finalLpPrice = uint256(vm.load(address(c), LP_SHARE_PRICE_SLOT));
+        uint256 finalBorrowerPrice = uint256(vm.load(address(c), BORROWER_SHARE_PRICE_SLOT));
+        
+        // At 100% utilization, we use the MAX_INTEREST_PER_SECOND rate
+        // MAX_INTEREST_PER_SECOND = 15854895991 (approximately 50% APY)
+        // After 1 year, borrower price should be approximately 1.5e18 (50% higher)
+        // LP price should also increase but less (due to utilization factor)
+        
+        // These bounds ensure the division by 1e18 is working
+        // Without division: prices would be astronomical (> 1e28)
+        // With division: prices should be reasonable (around 1.1-1.6e18 range)
+        assertGt(finalBorrowerPrice, 1.4e18, "Borrower price should increase significantly over 1 year");
+        assertLt(finalBorrowerPrice, 1.6e18, "Borrower price should not be astronomical");
+        
+        assertGt(finalLpPrice, 1.4e18, "LP price should increase over 1 year"); 
+        assertLt(finalLpPrice, 1.6e18, "LP price should not be astronomical");
+        
+        // Borrower rate should be higher than LP rate at 100% utilization
+        assertGe(finalBorrowerPrice, finalLpPrice, "Borrower rate should be >= LP rate");
+    }
+    
+    function test_share_price_accrual_catches_missing_division_bug() public {
+        // This test specifically catches the missing /1e18 division bug
+        // Setup minimal utilization to get predictable rates
+        uint256 deposited = 1000e18;
+        uint256 borrowed = 950e18; // 95% utilization (at OPTIMAL_UTILIZATION)
+        
+        vm.store(address(c), TOTAL_DEPOSITED_TOKENS_SLOT, bytes32(uint256(deposited)));
+        vm.store(address(c), TOTAL_BORROWED_TOKENS_SLOT, bytes32(uint256(borrowed)));
+        
+        // Skip just 1 second to make the calculation simple
+        skip(1);
+        
+        c.updateSharePrices();
+        
+        uint256 finalBorrowerPrice = uint256(vm.load(address(c), BORROWER_SHARE_PRICE_SLOT));
+        
+        // At 95% utilization, borrower rate = KINK_INTEREST_PER_SECOND = 1585489599
+        // After 1 second with correct division: 1e18 + (1e18 * 1585489599 * 1) / 1e18 = ~1.001585e18
+        // After 1 second WITHOUT division: 1e18 + (1e18 * 1585489599 * 1) = ~1.585e27 (astronomical!)
+        
+        // This assertion would fail without the /1e18 division
+        assertLt(finalBorrowerPrice, 1.01e18, "Borrower price should increase modestly after 1 second");
+        assertGt(finalBorrowerPrice, 1e18, "Borrower price should increase");
+        
+        // More specifically, it should be very close to the expected value
+        uint256 expectedIncrease = 1e18 * 1585489599 / 1e18; // ≈ 1.585e9 wei
+        uint256 expectedPrice = 1e18 + expectedIncrease;
+        
+        // Allow some tolerance for calculation precision
+        assertApproxEqRel(finalBorrowerPrice, expectedPrice, 0.001e18, "Price should match expected calculation");
+    }
+    
+    function test_share_price_no_time_elapsed() public {
+        // Setup some utilization
+        vm.store(address(c), TOTAL_DEPOSITED_TOKENS_SLOT, bytes32(uint256(1000e18)));
+        vm.store(address(c), TOTAL_BORROWED_TOKENS_SLOT, bytes32(uint256(500e18)));
+        
+        // Don't skip time - same block
+        c.updateSharePrices();
+        
+        uint256 lpPrice = uint256(vm.load(address(c), LP_SHARE_PRICE_SLOT));
+        uint256 borrowerPrice = uint256(vm.load(address(c), BORROWER_SHARE_PRICE_SLOT));
+        
+        // Prices should remain unchanged when no time elapsed
+        assertEq(lpPrice, 1e18, "LP price should be unchanged with no time elapsed");
+        assertEq(borrowerPrice, 1e18, "Borrower price should be unchanged with no time elapsed");
+    }
+    
+    function test_share_price_zero_utilization() public {
+        // Setup: deposits but no borrows (0% utilization)
+        vm.store(address(c), TOTAL_DEPOSITED_TOKENS_SLOT, bytes32(uint256(1000e18)));
+        vm.store(address(c), TOTAL_BORROWED_TOKENS_SLOT, bytes32(uint256(0)));
+        
+        skip(31536000); // 1 year
+        
+        c.updateSharePrices();
+        
+        uint256 lpPrice = uint256(vm.load(address(c), LP_SHARE_PRICE_SLOT));
+        uint256 borrowerPrice = uint256(vm.load(address(c), BORROWER_SHARE_PRICE_SLOT));
+        
+        // At 0% utilization, both rates should be 0, so prices unchanged
+        assertEq(lpPrice, 1e18, "LP price should be unchanged at 0% utilization");
+        assertEq(borrowerPrice, 1e18, "Borrower price should be unchanged at 0% utilization");
     }
 }

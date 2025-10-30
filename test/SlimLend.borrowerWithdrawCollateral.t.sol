@@ -130,14 +130,14 @@ contract SlimLendTest is Test {
         _prepareContractCollateral(collateralAmount);
 
         // Verify initial state
-        uint256 initialRatio = c.collateralization_ratio(user);
+        uint256 initialRatio = c.collateralizationRatio(user);
         assertEq(initialRatio, 3e18, "Should start at 300% collateralization");
 
         vm.prank(user);
         c.borrowerWithdrawCollateral(withdrawAmount);
 
         // Verify final collateralization
-        uint256 finalRatio = c.collateralization_ratio(user);
+        uint256 finalRatio = c.collateralizationRatio(user);
         assertEq(finalRatio, 2e18, "Should end at 200% collateralization");
         assertGe(finalRatio, MIN_COLLATERALIZATION_RATIO, "Should still meet minimum requirement");
 
@@ -198,7 +198,7 @@ contract SlimLendTest is Test {
         _prepareContractCollateral(collateralAmount);
 
         // Verify initial state is valid
-        uint256 initialRatio = c.collateralization_ratio(user);
+        uint256 initialRatio = c.collateralizationRatio(user);
         assertEq(initialRatio, 1.8e18, "Should start at 180% collateralization");
 
         // Withdrawal should fail due to minimum collateralization
@@ -229,7 +229,7 @@ contract SlimLendTest is Test {
         vm.prank(user);
         c.borrowerWithdrawCollateral(withdrawAmount);
 
-        uint256 finalRatio = c.collateralization_ratio(user);
+        uint256 finalRatio = c.collateralizationRatio(user);
         assertEq(finalRatio, MIN_COLLATERALIZATION_RATIO, "Should be exactly at minimum");
         assertEq(finalRatio, 1.5e18, "Should be 150%");
 
@@ -253,7 +253,7 @@ contract SlimLendTest is Test {
         // Initial ratio: 160% > 150% ✅ (would pass if checked before withdrawal)
         // Final ratio: 140% < 150% ❌ (correctly fails when checked after withdrawal)
         
-        uint256 initialRatio = c.collateralization_ratio(user);
+        uint256 initialRatio = c.collateralizationRatio(user);
         assertEq(initialRatio, 1.6e18, "Should start at 160%");
         assertGe(initialRatio, MIN_COLLATERALIZATION_RATIO, "Initial ratio should be valid");
 
@@ -315,7 +315,7 @@ contract SlimLendTest is Test {
         // Initial: $300/$200 = 150% (exactly at minimum)
         // After withdrawal: $250/$200 = 125% < 150% (should fail)
         
-        uint256 initialRatio = c.collateralization_ratio(user);
+        uint256 initialRatio = c.collateralizationRatio(user);
         assertEq(initialRatio, 1.5e18, "Should start at exactly 150%");
 
         vm.prank(user);
@@ -342,7 +342,7 @@ contract SlimLendTest is Test {
         vm.prank(user);
         c.borrowerWithdrawCollateral(withdrawTokens); // Should succeed
 
-        uint256 finalRatio = c.collateralization_ratio(user);
+        uint256 finalRatio = c.collateralizationRatio(user);
         assertEq(finalRatio, 2.5e18, "Should be 250% after withdrawal");
 
         (uint256 finalShares, uint256 finalCollateral) = c.borrowerInfo(user);
@@ -407,7 +407,7 @@ contract SlimLendTest is Test {
         _prepareContractCollateral(collateralAmount);
 
         // Initial: 150% ratio (exactly at minimum)
-        uint256 initialRatio = c.collateralization_ratio(user);
+        uint256 initialRatio = c.collateralizationRatio(user);
         assertEq(initialRatio, 1.5e18, "Should start at 150%");
 
         // Withdrawing 1 wei should put us below minimum
@@ -430,7 +430,7 @@ contract SlimLendTest is Test {
         _prepareContractCollateral(collateralAmount);
 
         // Initial ratio: slightly above 150%
-        uint256 initialRatio = c.collateralization_ratio(user);
+        uint256 initialRatio = c.collateralizationRatio(user);
         assertGt(initialRatio, MIN_COLLATERALIZATION_RATIO, "Should be slightly above minimum");
 
         // After withdrawing 2 wei, should drop below minimum
@@ -460,7 +460,7 @@ contract SlimLendTest is Test {
         (uint256 midShares, uint256 midCollateral) = c.borrowerInfo(user);
         assertEq(midCollateral, 250e18, "Should have 250e18 after first withdrawal");
 
-        uint256 midRatio = c.collateralization_ratio(user);
+        uint256 midRatio = c.collateralizationRatio(user);
         assertEq(midRatio, 2.5e18, "Should be 250% after first withdrawal");
 
         // Second withdrawal: 250 -> 210 (210% ratio)
@@ -470,7 +470,7 @@ contract SlimLendTest is Test {
         (uint256 finalShares, uint256 finalCollateral) = c.borrowerInfo(user);
         assertEq(finalCollateral, 210e18, "Should have 210e18 after second withdrawal");
 
-        uint256 finalRatio = c.collateralization_ratio(user);
+        uint256 finalRatio = c.collateralizationRatio(user);
         assertEq(finalRatio, 2.1e18, "Should be 210% after second withdrawal");
 
         // Verify user received both amounts

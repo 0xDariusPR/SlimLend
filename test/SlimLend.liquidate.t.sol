@@ -107,7 +107,7 @@ contract SlimLendTest is Test {
 
         // Verify borrower can be liquidated
         assertTrue(c.canLiquidate(borrower), "Borrower should be liquidatable");
-        uint256 ratio = c.collateralization_ratio(borrower);
+        uint256 ratio = c.collateralizationRatio(borrower);
         assertLt(ratio, LIQUIDATION_THRESHOLD, "Ratio should be below liquidation threshold");
 
         // Initial state checks
@@ -213,7 +213,7 @@ contract SlimLendTest is Test {
         _prepareCollateralForContract(collateralAmount);
 
         // At exactly 110%, should NOT be liquidatable (need to be below threshold)
-        uint256 ratio = c.collateralization_ratio(borrower);
+        uint256 ratio = c.collateralizationRatio(borrower);
         assertEq(ratio, LIQUIDATION_THRESHOLD, "Should be exactly at threshold");
         assertFalse(c.canLiquidate(borrower), "Should not be liquidatable at exact threshold");
 
@@ -239,7 +239,7 @@ contract SlimLendTest is Test {
         _prepareCollateralForContract(collateralAmount);
 
         // Should be liquidatable (just below threshold)
-        uint256 ratio = c.collateralization_ratio(borrower);
+        uint256 ratio = c.collateralizationRatio(borrower);
         assertLt(ratio, LIQUIDATION_THRESHOLD, "Should be below threshold");
         assertTrue(c.canLiquidate(borrower), "Should be liquidatable just below threshold");
 
@@ -332,7 +332,7 @@ contract SlimLendTest is Test {
         _prepareCollateralForContract(collateralAmount);
 
         // Verify ratio calculation with higher share price
-        uint256 ratio = c.collateralization_ratio(borrower);
+        uint256 ratio = c.collateralizationRatio(borrower);
         assertEq(ratio, 1.05e18, "Should be 105% collateralized (105/100)");
         assertTrue(c.canLiquidate(borrower), "Should be liquidatable at 105%");
 
@@ -365,7 +365,7 @@ contract SlimLendTest is Test {
         _prepareCollateralForContract(collateralTokens);
 
         // Verify ratio with higher collateral price
-        uint256 ratio = c.collateralization_ratio(borrower);
+        uint256 ratio = c.collateralizationRatio(borrower);
         assertEq(ratio, 1.05e18, "Should be 105% collateralized ($105/$100)");
 
         vm.prank(liquidator);

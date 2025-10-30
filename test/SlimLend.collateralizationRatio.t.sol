@@ -81,7 +81,7 @@ contract SlimLendTest is Test {
         _setCollateralAmount(user, 1000e18);
         _setBorrowerShares(user, 0);
         
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, type(uint256).max, "No debt should return infinite collateralization ratio");
     }
 
@@ -89,7 +89,7 @@ contract SlimLendTest is Test {
         address user = address(0x2);
         
         // No collateral and no debt (both default to 0)
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, type(uint256).max, "No debt should return infinite collateralization ratio even with no collateral");
     }
 
@@ -106,7 +106,7 @@ contract SlimLendTest is Test {
         // Set price to $1
         priceFeed.setPrice(1e8);
         
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, 2e18, "200% collateralization: $200 collateral / $100 debt = 2.0");
     }
 
@@ -122,7 +122,7 @@ contract SlimLendTest is Test {
         
         priceFeed.setPrice(1e8);
         
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, 1.5e18, "150% collateralization: $150 collateral / $100 debt = 1.5");
     }
 
@@ -138,7 +138,7 @@ contract SlimLendTest is Test {
         
         priceFeed.setPrice(1e8);
         
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, 0.7e18, "70% collateralization: $70 collateral / $100 debt = 0.7");
     }
 
@@ -152,7 +152,7 @@ contract SlimLendTest is Test {
         
         priceFeed.setPrice(1e8);
         
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, 0, "No collateral with debt should return 0% collateralization");
     }
 
@@ -168,12 +168,12 @@ contract SlimLendTest is Test {
         
         // Test with $2 price: 100 tokens * $2 = $200 collateral
         priceFeed.setPrice(2e8);
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, 2e18, "At $2 price: $200 collateral / $100 debt = 2.0");
         
         // Test with $0.5 price: 100 tokens * $0.5 = $50 collateral
         priceFeed.setPrice(0.5e8);
-        ratio = c.collateralization_ratio(user);
+        ratio = c.collateralizationRatio(user);
         assertEq(ratio, 0.5e18, "At $0.5 price: $50 collateral / $100 debt = 0.5");
     }
 
@@ -189,17 +189,17 @@ contract SlimLendTest is Test {
         
         // Test with 1e18 share price: 100 shares * 1e18 = $100 debt
         _setBorrowerSharePrice(1e18);
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, 2e18, "With 1e18 share price: $200 collateral / $100 debt = 2.0");
         
         // Test with 2e18 share price: 100 shares * 2e18 = $200 debt
         _setBorrowerSharePrice(2e18);
-        ratio = c.collateralization_ratio(user);
+        ratio = c.collateralizationRatio(user);
         assertEq(ratio, 1e18, "With 2e18 share price: $200 collateral / $200 debt = 1.0");
         
         // Test with 0.5e18 share price: 100 shares * 0.5e18 = $50 debt
         _setBorrowerSharePrice(0.5e18);
-        ratio = c.collateralization_ratio(user);
+        ratio = c.collateralizationRatio(user);
         assertEq(ratio, 4e18, "With 0.5e18 share price: $200 collateral / $50 debt = 4.0");
     }
 
@@ -215,7 +215,7 @@ contract SlimLendTest is Test {
         
         priceFeed.setPrice(1e8);
         
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         // 1 wei collateral * 1e8 price / 1e8 decimals = 1 wei collateral value
         // 1 wei shares * 1e18 share price / 1e18 = 1 wei debt value
         // ratio = 1e18 * 1 / 1 = 1e18 (100% collateralized)
@@ -237,8 +237,8 @@ contract SlimLendTest is Test {
         _setBorrowerSharePrice(1e18);
         priceFeed.setPrice(1e8);
         
-        uint256 ratio1 = c.collateralization_ratio(user1);
-        uint256 ratio2 = c.collateralization_ratio(user2);
+        uint256 ratio1 = c.collateralizationRatio(user1);
+        uint256 ratio2 = c.collateralizationRatio(user2);
         
         assertEq(ratio1, 2e18, "User1 should be 200% collateralized");
         assertEq(ratio2, 0.8e18, "User2 should be 80% collateralized");
@@ -254,17 +254,17 @@ contract SlimLendTest is Test {
         priceFeed.setPrice(1e8);
         
         // Test exactly 100% collateralized
-        uint256 ratio = c.collateralization_ratio(user);
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, 1e18, "Should be exactly 100% collateralized");
         
         // Test MIN_COLLATERALIZATION_RATIO (80%)
         _setCollateralAmount(user, 80e18);
-        ratio = c.collateralization_ratio(user);
+        ratio = c.collateralizationRatio(user);
         assertEq(ratio, 0.8e18, "Should match MIN_COLLATERALIZATION_RATIO");
         
         // Test LIQUIDATION_THRESHOLD (90%)
         _setCollateralAmount(user, 90e18);
-        ratio = c.collateralization_ratio(user);
+        ratio = c.collateralizationRatio(user);
         assertEq(ratio, 0.9e18, "Should match LIQUIDATION_THRESHOLD");
     }
 
@@ -279,8 +279,8 @@ contract SlimLendTest is Test {
         _setBorrowerShares(user, largeDebt);
         _setBorrowerSharePrice(1e18);
         priceFeed.setPrice(1e8);
-        
-        uint256 ratio = c.collateralization_ratio(user);
+
+        uint256 ratio = c.collateralizationRatio(user);
         assertEq(ratio, 2e18, "Large numbers should calculate correctly without overflow");
     }
 }
